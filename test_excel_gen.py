@@ -46,7 +46,7 @@ def run_test():
         else:
             counselor_map[k] = v
             
-    roster_rows = app.process_roster(master_df, session_df, "Tennis", "Session 2", counselor_map)
+    roster_rows = app.process_roster(session_df, "Tennis", "Session 2", counselor_map)
     
     # 3. Generate new workbook in-memory and reload
     excel_stream = app.generate_excel_workbook(roster_rows, "Tennis", "Session 2")

@@ -329,7 +329,7 @@ def generate_excel_workbook(roster_rows, sport, session_name):
     headers.extend(dates)
     
     trailing_headers = [
-        "Lessons Left", "Programming Notes", "Refund Amount", "Refund Check # or Clover"
+        "Programming Notes", "Refund Amount", "Refund Check # or Clover"
     ]
     headers.extend(trailing_headers)
     
@@ -432,14 +432,19 @@ def generate_excel_workbook(roster_rows, sport, session_name):
         cell_memo.font = Font(name="Arial", size=10.0, bold=False, color="000000")
         cell_memo.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
         
-        # Session total (Col 11 / K)
-        cell_tot = ws.cell(row=row_idx, column=11, value=row_data["session_lessons"])
+        session_lessons_val = row_data["session_lessons"]
+        date_start_letter = get_column_letter(13)
+        date_end_letter = get_column_letter(12 + len(dates))
+        
+        # Session total formula (Col 11 / K) - Total minus Sum of dates
+        sess_total_formula = f"={session_lessons_val}-SUM({date_start_letter}{row_idx}:{date_end_letter}{row_idx})"
+        cell_tot = ws.cell(row=row_idx, column=11, value=sess_total_formula)
         cell_tot.font = Font(name="Arial", size=24.0, bold=False, color="000000")
         cell_tot.alignment = Alignment(horizontal="center", vertical="center")
         cell_tot.fill = fill_k
         
-        # Other session hours formula (Col 12 / L)
-        other_hours_formula = f"={row_data['total_lessons']}-K{row_idx}"
+        # Other session hours formula (Col 12 / L) - Total minus the starting session lessons
+        other_hours_formula = f"={row_data['total_lessons']}-{session_lessons_val}"
         cell_other = ws.cell(row=row_idx, column=12, value=other_hours_formula)
         cell_other.font = font_l
         cell_other.alignment = Alignment(horizontal="center", vertical="center")
@@ -452,16 +457,8 @@ def generate_excel_workbook(roster_rows, sport, session_name):
             cell_d.alignment = Alignment(horizontal="center", vertical="center")
             cell_d.border = thin_border
             
-        # Lessons Left formula (Col 13 + len(dates))
-        date_start_letter = get_column_letter(13)
-        date_end_letter = get_column_letter(12 + len(dates))
-        lessons_left_formula = f"=K{row_idx}-SUM({date_start_letter}{row_idx}:{date_end_letter}{row_idx})"
-        cell_left = ws.cell(row=row_idx, column=13 + len(dates), value=lessons_left_formula)
-        cell_left.font = Font(name="Arial", size=14.0, bold=False)
-        cell_left.alignment = Alignment(horizontal="center", vertical="center")
-        
-        # Trailing columns: Notes, Refund, Refund Clover
-        for c in range(14 + len(dates), 17 + len(dates)):
+        # Trailing columns: Notes, Refund, Refund Clover (starts directly after dates)
+        for c in range(13 + len(dates), 16 + len(dates)):
             cell_trail = ws.cell(row=row_idx, column=c)
             cell_trail.font = Font(name="Arial", size=14.0, bold=False)
             cell_trail.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
@@ -534,8 +531,8 @@ def generate_excel_workbook(roster_rows, sport, session_name):
         col_letter = get_column_letter(c)
         column_widths[col_letter] = 10
     
-    trail_letters = [get_column_letter(c) for c in range(13 + len(dates), 17 + len(dates))]
-    trail_widths = [12, 20, 12, 18]  # Lessons Left, Notes, Refund, Check info
+    trail_letters = [get_column_letter(c) for c in range(13 + len(dates), 16 + len(dates))]
+    trail_widths = [20, 12, 18]  # Notes, Refund, Check info
     for letter, w in zip(trail_letters, trail_widths):
         column_widths[letter] = w
         
